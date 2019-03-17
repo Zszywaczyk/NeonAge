@@ -95,7 +95,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
         QVector3D m_robotPosition;
         float robotArmAngle = 0;
 
-        int cameraChoiceID=FPP;
+        int cameraType=FPP;
         void cameraTypeUpdateGL();
 
 };

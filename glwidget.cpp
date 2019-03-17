@@ -244,6 +244,16 @@ void GLWidget::paintGL()
 
     m_world = worldMatrixStack.pop();
 
+    //cube for 0 position
+    worldMatrixStack.push(m_world);
+        m_world.translate(0.0f, 0.0f, 0.0f);
+        m_world.scale(QVector3D(1.2f, 1.2f, 1.2f));
+        setTransforms();
+        m_program->setUniformValue(m_modelColorLoc, QVector3D(1.0f, 1.0, 1.0));
+        m_meshes["Cube"]->render(this);
+    m_world = worldMatrixStack.pop();
+
+
     // Circle of spheres and cubes
     for(int i = 0 ; i < 15 ; i++)
     {
@@ -323,22 +333,30 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 {
     int dx = event->x() - width()/2;
     int dy = event->y() - height()/2;
-    cout << "DX:  "<<dx<<"\tDY:  "<<dy<<endl;
+    //cout << "DX:  "<<dx<<"\tDY:  "<<dy<<endl;
 
-    float phi = atan2(m_player.direction.z(), m_player.direction.x());
-    float theta = acosf(m_player.direction.y());
+    //for 3 types of camera
+    if(cameraType==FPP || cameraType==TPP || cameraType==FPP_GOD){
+        float phi = atan2(m_player.direction.z(), m_player.direction.x());
+        float theta = acosf(m_player.direction.y());
 
-    // obliczenie phi i theta
-    phi = phi + dx * 0.01f;
-    theta = theta + dy * 0.01f;
+        // obliczenie phi i theta
+        phi = phi + dx * 0.01f;
+        theta = theta + dy * 0.01f;
 
-    if(theta < 0.01f) theta = 0.01f;
-    if(theta > 3.14f) theta = 3.14f;
+        if(theta < 0.01f) theta = 0.01f;
+        if(theta > 3.14f) theta = 3.14f;
 
-    // ustawienie m_player.direction
-    m_player.direction.setX(sin(theta) * cos(phi));
-    m_player.direction.setY(cos(theta));
-    m_player.direction.setZ(sin(theta) * sin(phi));
+        // ustawienie m_player.direction
+        m_player.direction.setX(sin(theta) * cos(phi));
+        m_player.direction.setY(cos(theta));
+        m_player.direction.setZ(sin(theta) * sin(phi));
+    }
+
+    //isimetric camera should have blocked camera rottion and rotate player around axis Y
+    if(cameraType==ISOMETRIC){
+
+    }
 
     if (event->buttons() & Qt::LeftButton) {
         setXRotation(m_camXRot + 0.5f * dy);
@@ -354,11 +372,15 @@ void GLWidget::keyPressEvent(QKeyEvent *e)
 {
     if (e->key() == Qt::Key_Escape)
         exit(0);
-    //Camera state change
+    //Camera type change
     else if(e->key() == Qt::Key_F1)
-        cameraChoiceID = FPP;
+        cameraType = FPP;
     else if(e->key() == Qt::Key_F2)
-        cameraChoiceID = TPP;
+        cameraType = TPP;
+    else if(e->key() == Qt::Key_F3)
+        cameraType = ISOMETRIC;
+    else if(e->key() == Qt::Key_F4)
+        cameraType = TPP;
     //=======
     else
         QWidget::keyPressEvent(e);
@@ -425,22 +447,26 @@ void GLWidget::keyboardAction(){
 }
 void GLWidget::cameraTypeUpdateGL(){
     //FPP
-    if(cameraChoiceID == FPP){
+    if(cameraType == FPP){
         m_camera.lookAt(m_player.position,
                     m_player.position + m_player.direction,
                     QVector3D(0,1,0));
     }
     //TPP
-    else if(cameraChoiceID == TPP){
+    else if(cameraType == TPP){
         m_camera.lookAt(
             m_player.position - m_camDistance * m_player.direction,
             m_player.position,
             QVector3D(0, 1, 0) );
     }
-    else if(cameraChoiceID == ISOMETRIC){
-
+    else if(cameraType == ISOMETRIC){
+//m_player.position - m_camDistance -
+        m_camera.lookAt(
+            QVector3D(m_player.position.x()+m_camDistance, m_camDistance*2, m_player.position.z() + m_camDistance),
+            m_player.position,
+            QVector3D(0, 1, 0) );
     }
-    else if(cameraChoiceID == FPP_GOD){
+    else if(cameraType == FPP_GOD){
 
     }
 }
@@ -450,6 +476,6 @@ void GLWidget::updateGL()
     keyboardAction();
 	robotArmAngle = robotArmAngle + 1;
     QCursor::setPos(mapToGlobal(QPoint(width()/2, height()/2))); //mysz na srodek
-
+    m_player.printPosition();
 
 }
