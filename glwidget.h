@@ -10,6 +10,12 @@
 #include <QElapsedTimer>
 #include "player.h"
 
+#define FPP             1
+#define TPP             2
+#define ISOMETRIC       3
+#define FPP_GOD         4
+
+
 QT_FORWARD_DECLARE_CLASS(QOpenGLShaderProgram)
 
 class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
@@ -18,7 +24,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
 
     public:
         GLWidget(QWidget *parent = nullptr);
-        ~GLWidget();
+        ~GLWidget() override;
 
         QSize sizeHint() const override;
 
@@ -88,6 +94,9 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
 
         QVector3D m_robotPosition;
         float robotArmAngle = 0;
+
+        int cameraChoiceID=FPP;
+        void cameraTypeUpdateGL();
 
 };
 

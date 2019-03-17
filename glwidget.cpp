@@ -154,15 +154,18 @@ void GLWidget::paintGL()
     m_world.setToIdentity();
 
     //FPP
-    /*m_camera.lookAt(m_player.position,
+        /*m_camera.lookAt(m_player.position,
                     m_player.position + m_player.direction,
-                    QVector3D(0,1,0));*/
+                    QVector3D(0,1,0));
 
     //TPP
+    if(cameraChoiceID == TPP){
     m_camera.lookAt(
         m_player.position - m_camDistance * m_player.direction,
         m_player.position,
         QVector3D(0, 1, 0) );
+    }*/
+    cameraTypeUpdateGL();
 
     // Bunny
     worldMatrixStack.push(m_world);
@@ -351,8 +354,12 @@ void GLWidget::keyPressEvent(QKeyEvent *e)
 {
     if (e->key() == Qt::Key_Escape)
         exit(0);
-    //else if (e->key() == Qt::Key_Q)
-        //exit(0);
+    //Camera state change
+    else if(e->key() == Qt::Key_F1)
+        cameraChoiceID = FPP;
+    else if(e->key() == Qt::Key_F2)
+        cameraChoiceID = TPP;
+    //=======
     else
         QWidget::keyPressEvent(e);
 
@@ -416,10 +423,33 @@ void GLWidget::keyboardAction(){
     //m_player.printPosition();
     //m_player.printDirection();
 }
+void GLWidget::cameraTypeUpdateGL(){
+    //FPP
+    if(cameraChoiceID == FPP){
+        m_camera.lookAt(m_player.position,
+                    m_player.position + m_player.direction,
+                    QVector3D(0,1,0));
+    }
+    //TPP
+    else if(cameraChoiceID == TPP){
+        m_camera.lookAt(
+            m_player.position - m_camDistance * m_player.direction,
+            m_player.position,
+            QVector3D(0, 1, 0) );
+    }
+    else if(cameraChoiceID == ISOMETRIC){
+
+    }
+    else if(cameraChoiceID == FPP_GOD){
+
+    }
+}
 
 void GLWidget::updateGL()
 {
     keyboardAction();
 	robotArmAngle = robotArmAngle + 1;
     QCursor::setPos(mapToGlobal(QPoint(width()/2, height()/2))); //mysz na srodek
+
+
 }
