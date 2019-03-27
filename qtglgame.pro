@@ -2,13 +2,15 @@ HEADERS       = glwidget.h \
                 window.h \
                 mainwindow.h \
     cmesh.h \
-    player.h
+    player.h \
+    gameobject.h
 SOURCES       = glwidget.cpp \
                 main.cpp \
                 window.cpp \
                 mainwindow.cpp \
     cmesh.cpp \
-    player.cpp
+    player.cpp \
+    gameobject.cpp
 
 QT           += widgets
 
