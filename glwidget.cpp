@@ -1,3 +1,4 @@
+#include "cube.h"
 #include "glwidget.h"
 #include <QMouseEvent>
 #include <QOpenGLShaderProgram>
@@ -26,8 +27,8 @@ GLWidget::GLWidget(QWidget *parent)
 
 GLWidget::~GLWidget()
 {
-    for(auto it = m_meshes.begin() ; it != m_meshes.end(); it++)
-        delete it.value();
+    /*for(auto it = m_meshes.begin() ; it != m_meshes.end(); it++)
+        delete it.value();*/
 
     cleanup();
 }
@@ -48,46 +49,39 @@ void GLWidget::cleanup()
     doneCurrent();
 }
 
-void GLWidget::qNormalizeAngle(float &angle)
-{
-    while (angle < 0)
-        angle += 360;
-    while (angle > 360)
-        angle -= 360;
-}
+void GLWidget::gridOfCubes(){
+    for(int i = 0 ; i < 5 ; i++){
+        for(int j = 0 ; j < 7 ; j++){
+            // Wskaźnik do Cube'a z tworzeniem obiektu.
+            // MUSI BYĆ WSKAŹNIK !!!
+            Cube* cube = new Cube();
 
-void GLWidget::setXRotation(float angle)
-{
-    qNormalizeAngle(angle);
-    if (abs(angle - m_camXRot) > 0.001f) {
-        m_camXRot = angle;
-        emit xRotationChanged(angle);
-        update();
-    }
-}
+            // Ustawienie pozycji Cube'a
+            cube->position.setX(j * 1 - 3);
+            cube->position.setY(0);
+            cube->position.setZ(i * 1 - 6);
+            // Kolor Cube'a. Zwykły gradient.
+            cube->material_color.setX(i * 0.2f);
+            cube->material_color.setY(0.5f);
+            cube->material_color.setZ(j * 0.1f);
 
-void GLWidget::setYRotation(float angle)
-{
-    qNormalizeAngle(angle);
-    if (abs(angle - m_camYRot) > 0.001f) {
-        m_camYRot = angle;
-        emit yRotationChanged(angle);
-        update();
-    }
-}
+            // Wielkość Cube'a.
+            // Ustawienie w jednej linijce
+            // zamiast osobno dla X, Y i Z.
+            cube->scale = QVector3D(0.3f, 0.3f, 0.3f);
 
-void GLWidget::setZRotation(float angle)
-{
-    qNormalizeAngle(angle);
-    if (abs(angle - m_camZRot) > 0.001f) {
-        m_camZRot = angle;
-        emit zRotationChanged(angle);
-        update();
+            // Dodanie obiektu do sceny.
+            addObject(cube);
+        }
     }
 }
 
 void GLWidget::initializeGL()
 {
+    addObject(&m_player);
+    //pole kwadratow
+    gridOfCubes();
+
     initializeOpenGLFunctions();
     glClearColor(0.1f, 0.2f, 0.3f, 1);
     glFrontFace(GL_CCW);
@@ -109,14 +103,14 @@ void GLWidget::initializeGL()
     m_lightLoc.ambient = m_program->uniformLocation("light.ambient");
     m_lightLoc.diffuse = m_program->uniformLocation("light.diffuse");
 
-    m_meshes.insert("Cube", new CMesh);
+    /*m_meshes.insert("Cube", new CMesh);
     m_meshes["Cube"]->generateCube(1.0f, 1.0f, 1.0f);
 
     m_meshes.insert("Sphere", new CMesh);
     m_meshes["Sphere"]->generateSphere(0.5f, 24);
 
     m_meshes.insert("Bunny", new CMesh);
-    m_meshes["Bunny"]->generateMeshFromObjFile("resources/bunny.obj");
+    m_meshes["Bunny"]->generateMeshFromObjFile("resources/bunny.obj");*/
 
     m_program->release();
 	
@@ -124,7 +118,7 @@ void GLWidget::initializeGL()
 	timer.start();
 	FPS = 60;
 
-    m_robotPosition = QVector3D(0.0f, 0.0f, 0.0f);
+    //m_robotPosition = QVector3D(0.0f, 0.0f, 0.0f);
 	
 }
 
@@ -167,128 +161,144 @@ void GLWidget::paintGL()
     }*/
     cameraTypeUpdateGL();
 
-    // Bunny
-    worldMatrixStack.push(m_world);
-        m_world.translate(0.7f, 0.0f, 0.2f);
-        m_world.scale(QVector3D(0.1f, 0.1f, 0.1f));
-        setTransforms();
-        m_program->setUniformValue(m_modelColorLoc,QVector3D(1.0f, 1.0, 1.0));
-        m_meshes["Bunny"]->render(this);
-    m_world = worldMatrixStack.pop();
+    for(int i= 0; i< m_gameObjects.size();i++){
+        GameObject* obj = m_gameObjects[i];
 
-    // Robot
-    worldMatrixStack.push(m_world);
-
-        m_world.translate(m_player.position);
-        float phi = atan2(m_player.direction.z(), m_player.direction.x());
-        m_world.rotate(float(-phi * 180.0f / float(M_PI) + 90.0f), 0, 1, 0);
-
-    // Robot's Head
-        worldMatrixStack.push(m_world);
-            m_world.translate(0.0f, 0.20f, 0.0f);
-            m_world.scale(QVector3D(0.1f, 0.1f, 0.1f));
-            setTransforms();
-            m_program->setUniformValue(m_modelColorLoc, QVector3D(0.0f, 1.0, 0.0));
-            m_meshes["Cube"]->render(this);
-        m_world = worldMatrixStack.pop();
-
-    // Robot's Body
-        worldMatrixStack.push(m_world);
-            m_world.translate(0.0f, 0.0f, 0.0f);
-            m_world.scale(QVector3D(0.25f, 0.3f, 0.15f));
-            setTransforms();
-            m_program->setUniformValue(m_modelColorLoc, QVector3D(0.0f, 0.0, 1.0));
-            m_meshes["Cube"]->render(this);
-        m_world = worldMatrixStack.pop();
-
-    // Robot's Left Arm
-        worldMatrixStack.push(m_world);
-            m_world.translate(-0.12f, 0.05f, 0.0f);
-            m_world.rotate(30*sin(robotArmAngle), 0, 0, 1);
-            m_world.translate(-0.08f, 0.0f, 0.0f);
-            m_world.scale(QVector3D(0.16f, 0.05f, 0.05f));
-            setTransforms();
-            m_program->setUniformValue(m_modelColorLoc, QVector3D(1.0f, 0.0, 0.0));
-            m_meshes["Cube"]->render(this);
-        m_world = worldMatrixStack.pop();
-
-    // Robot's Right Arm
-        worldMatrixStack.push(m_world);
-            m_world.translate(0.2f, 0.05f, 0.0f);
-            m_world.rotate(-15.0f, 0, 0, 1);
-            m_world.scale(QVector3D(0.16f, 0.05f, 0.05f));
-            setTransforms();
-            m_program->setUniformValue(m_modelColorLoc, QVector3D(1.0f, 0.0, 0.0));
-            m_meshes["Cube"]->render(this);
-        m_world = worldMatrixStack.pop();
-
-    // Robot's Left Leg
-        worldMatrixStack.push(m_world);
-            m_world.translate(-0.1f, -0.2f, 0.0f);
-            m_world.rotate(-15.0f, 0, 0, 1);
-            m_world.scale(QVector3D(0.05f, 0.16f, 0.05f));
-            setTransforms();
-            m_program->setUniformValue(m_modelColorLoc, QVector3D(1.0f, 0.0, 0.0));
-            m_meshes["Cube"]->render(this);
-        m_world = worldMatrixStack.pop();
-
-    // Robot's Right Leg
-        worldMatrixStack.push(m_world);
-            m_world.translate(0.1f, -0.2f, 0.0f);
-            m_world.rotate(15.0f, 0, 0, 1);
-            m_world.scale(QVector3D(0.05f, 0.16f, 0.05f));
-            setTransforms();
-            m_program->setUniformValue(m_modelColorLoc, QVector3D(1.0f, 0.0, 0.0));
-            m_meshes["Cube"]->render(this);
-        m_world = worldMatrixStack.pop();
-
-    m_world = worldMatrixStack.pop();
-
-    //cube for 0 position
-    worldMatrixStack.push(m_world);
-        m_world.translate(0.0f, 0.0f, 0.0f);
-        m_world.scale(QVector3D(1.2f, 1.2f, 1.2f));
-        setTransforms();
-        m_program->setUniformValue(m_modelColorLoc, QVector3D(1.0f, 1.0, 1.0));
-        m_meshes["Cube"]->render(this);
-    m_world = worldMatrixStack.pop();
-
-
-    // Circle of spheres and cubes
-    for(int i = 0 ; i < 15 ; i++)
-    {
-        QVector3D innerPosition;
-        QVector3D outerPosition;
-
-        float r1 = 1;
-        float r2 = 2;
-        float theta1 = float(i) / 15 * 2 * float(M_PI);
-        float theta2 = float(i+0.5f) / 15 * 2 * float(M_PI);
-
-        innerPosition.setX(r1 * cos(theta1));
-        innerPosition.setY(0);
-        innerPosition.setZ(r1 * sin(theta1));
-
-        outerPosition.setX(r2 * cos(theta2));
-        outerPosition.setY(0);
-        outerPosition.setZ(r2 * sin(theta2));
+        m_program->setUniformValue(m_modelColorLoc, obj->material_color);
 
         worldMatrixStack.push(m_world);
-            m_world.translate(innerPosition);
-            m_world.scale(QVector3D(0.2f, 0.2f, 0.2f));
+            m_world.translate(obj->position);
+            m_world.rotate(obj->rotation.x(),1,0,0);
+            m_world.rotate(obj->rotation.y(),0,1,0);
+            m_world.rotate(obj->rotation.z(),0,0,1);
+            m_world.scale(obj->scale);
             setTransforms();
-            m_program->setUniformValue(m_modelColorLoc, QVector3D(cos(theta1) * 0.5f + 0.5f, sin(theta1) * 0.5f + 0.5f, 0.0));
-            m_meshes["Sphere"]->render(this);
-        m_world = worldMatrixStack.pop();
-
-        worldMatrixStack.push(m_world);
-            m_world.translate(outerPosition);
-            m_world.scale(QVector3D(0.2f, 0.2f, 0.2f));
-            setTransforms();
-            m_program->setUniformValue(m_modelColorLoc, QVector3D(0.02f, cos(theta1) * 0.5f + 0.5f, sin(theta1) * 0.5f + 0.5f));
-            m_meshes["Cube"]->render(this);
+            obj->render(this);
         m_world = worldMatrixStack.pop();
     }
+
+//    // Bunny
+//    worldMatrixStack.push(m_world);
+//        m_world.translate(0.7f, 0.0f, 0.2f);
+//        m_world.scale(QVector3D(0.1f, 0.1f, 0.1f));
+//        setTransforms();
+//        m_program->setUniformValue(m_modelColorLoc,QVector3D(1.0f, 1.0, 1.0));
+//        //m_meshes["Bunny"]->render(this);
+//    m_world = worldMatrixStack.pop();
+
+//    // Robot
+//    worldMatrixStack.push(m_world);
+
+//        m_world.translate(m_player.position);
+//        float phi = atan2(m_player.direction.z(), m_player.direction.x());
+//        m_world.rotate(float(-phi * 180.0f / float(M_PI) + 90.0f), 0, 1, 0);
+
+//    // Robot's Head
+//        worldMatrixStack.push(m_world);
+//            m_world.translate(0.0f, 0.20f, 0.0f);
+//            m_world.scale(QVector3D(0.1f, 0.1f, 0.1f));
+//            setTransforms();
+//            m_program->setUniformValue(m_modelColorLoc, QVector3D(0.0f, 1.0, 0.0));
+//            //m_meshes["Cube"]->render(this);
+//        m_world = worldMatrixStack.pop();
+
+//    // Robot's Body
+//        worldMatrixStack.push(m_world);
+//            m_world.translate(0.0f, 0.0f, 0.0f);
+//            m_world.scale(QVector3D(0.25f, 0.3f, 0.15f));
+//            setTransforms();
+//            m_program->setUniformValue(m_modelColorLoc, QVector3D(0.0f, 0.0, 1.0));
+//            //m_meshes["Cube"]->render(this);
+//        m_world = worldMatrixStack.pop();
+
+//    // Robot's Left Arm
+//        worldMatrixStack.push(m_world);
+//            m_world.translate(-0.12f, 0.05f, 0.0f);
+//            //m_world.rotate(30*sin(robotArmAngle), 0, 0, 1);
+//            m_world.translate(-0.08f, 0.0f, 0.0f);
+//            m_world.scale(QVector3D(0.16f, 0.05f, 0.05f));
+//            setTransforms();
+//            m_program->setUniformValue(m_modelColorLoc, QVector3D(1.0f, 0.0, 0.0));
+//            //m_meshes["Cube"]->render(this);
+//        m_world = worldMatrixStack.pop();
+
+//    // Robot's Right Arm
+//        worldMatrixStack.push(m_world);
+//            m_world.translate(0.2f, 0.05f, 0.0f);
+//            m_world.rotate(-15.0f, 0, 0, 1);
+//            m_world.scale(QVector3D(0.16f, 0.05f, 0.05f));
+//            setTransforms();
+//            m_program->setUniformValue(m_modelColorLoc, QVector3D(1.0f, 0.0, 0.0));
+//            //m_meshes["Cube"]->render(this);
+//        m_world = worldMatrixStack.pop();
+
+//    // Robot's Left Leg
+//        worldMatrixStack.push(m_world);
+//            m_world.translate(-0.1f, -0.2f, 0.0f);
+//            m_world.rotate(-15.0f, 0, 0, 1);
+//            m_world.scale(QVector3D(0.05f, 0.16f, 0.05f));
+//            setTransforms();
+//            m_program->setUniformValue(m_modelColorLoc, QVector3D(1.0f, 0.0, 0.0));
+//            //m_meshes["Cube"]->render(this);
+//        m_world = worldMatrixStack.pop();
+
+//    // Robot's Right Leg
+//        worldMatrixStack.push(m_world);
+//            m_world.translate(0.1f, -0.2f, 0.0f);
+//            m_world.rotate(15.0f, 0, 0, 1);
+//            m_world.scale(QVector3D(0.05f, 0.16f, 0.05f));
+//            setTransforms();
+//            m_program->setUniformValue(m_modelColorLoc, QVector3D(1.0f, 0.0, 0.0));
+//            //m_meshes["Cube"]->render(this);
+//        m_world = worldMatrixStack.pop();
+
+//    m_world = worldMatrixStack.pop();
+
+//    //cube for 0 position
+//    worldMatrixStack.push(m_world);
+//        m_world.translate(0.0f, 0.0f, 0.0f);
+//        m_world.scale(QVector3D(1.2f, 1.2f, 1.2f));
+//        setTransforms();
+//        m_program->setUniformValue(m_modelColorLoc, QVector3D(1.0f, 1.0, 1.0));
+//        //m_meshes["Cube"]->render(this);
+//    m_world = worldMatrixStack.pop();
+
+
+//    // Circle of spheres and cubes
+//    for(int i = 0 ; i < 15 ; i++)
+//    {
+//        QVector3D innerPosition;
+//        QVector3D outerPosition;
+
+//        float r1 = 1;
+//        float r2 = 2;
+//        float theta1 = float(i) / 15 * 2 * float(M_PI);
+//        float theta2 = float(i+0.5f) / 15 * 2 * float(M_PI);
+
+//        innerPosition.setX(r1 * cos(theta1));
+//        innerPosition.setY(0);
+//        innerPosition.setZ(r1 * sin(theta1));
+
+//        outerPosition.setX(r2 * cos(theta2));
+//        outerPosition.setY(0);
+//        outerPosition.setZ(r2 * sin(theta2));
+
+//        worldMatrixStack.push(m_world);
+//            m_world.translate(innerPosition);
+//            m_world.scale(QVector3D(0.2f, 0.2f, 0.2f));
+//            setTransforms();
+//            m_program->setUniformValue(m_modelColorLoc, QVector3D(cos(theta1) * 0.5f + 0.5f, sin(theta1) * 0.5f + 0.5f, 0.0));
+//            //m_meshes["Sphere"]->render(this);
+//        m_world = worldMatrixStack.pop();
+
+//        worldMatrixStack.push(m_world);
+//            m_world.translate(outerPosition);
+//            m_world.scale(QVector3D(0.2f, 0.2f, 0.2f));
+//            setTransforms();
+//            m_program->setUniformValue(m_modelColorLoc, QVector3D(0.02f, cos(theta1) * 0.5f + 0.5f, sin(theta1) * 0.5f + 0.5f));
+//            //m_meshes["Cube"]->render(this);
+//        m_world = worldMatrixStack.pop();
+//    }
 
     m_program->release();
 
@@ -303,10 +313,10 @@ void GLWidget::paintGL()
     if(m_keyState[Qt::Key_Z]) m_camDistance += 0.005f;
     if(m_keyState[Qt::Key_X]) m_camDistance -= 0.005f;
 
-    if(m_keyState[Qt::Key_W]) m_robotPosition.setZ(m_robotPosition.z() - 0.005f);
+    /*if(m_keyState[Qt::Key_W]) m_robotPosition.setZ(m_robotPosition.z() - 0.005f);
     if(m_keyState[Qt::Key_S]) m_robotPosition.setZ(m_robotPosition.z() + 0.005f);
     if(m_keyState[Qt::Key_A]) m_robotPosition.setX(m_robotPosition.x() - 0.005f);
-    if(m_keyState[Qt::Key_D]) m_robotPosition.setX(m_robotPosition.x() + 0.005f);
+    if(m_keyState[Qt::Key_D]) m_robotPosition.setX(m_robotPosition.x() + 0.005f);*/
 
     update();
 }
@@ -358,13 +368,13 @@ void GLWidget::mouseMoveEvent(QMouseEvent *event)
 
     }
 
-    if (event->buttons() & Qt::LeftButton) {
+    /*if (event->buttons() & Qt::LeftButton) {
         setXRotation(m_camXRot + 0.5f * dy);
         setYRotation(m_camYRot + 0.5f * dx);
     } else if (event->buttons() & Qt::RightButton) {
         setXRotation(m_camXRot + 0.5f * dy);
         setZRotation(m_camZRot + 0.5f * dx);
-    }
+    }*/
     m_lastPos = event->pos();
 }
 
@@ -471,11 +481,21 @@ void GLWidget::cameraTypeUpdateGL(){
     }
 }
 
+void GLWidget::addObject(GameObject *obj)
+{
+    obj->init();
+    m_gameObjects.push_back(obj);
+}
+
 void GLWidget::updateGL()
 {
     keyboardAction();
-	robotArmAngle = robotArmAngle + 1;
+    //robotArmAngle = robotArmAngle + 1;
     QCursor::setPos(mapToGlobal(QPoint(width()/2, height()/2))); //mysz na srodek
     m_player.printPosition();
 
+    for(int i=0; i< m_gameObjects.size(); i++){
+        GameObject* obj = m_gameObjects[i];
+        obj->update();
+    }
 }

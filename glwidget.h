@@ -9,6 +9,9 @@
 #include "cmesh.h"
 #include <QElapsedTimer>
 #include "player.h"
+#include <vector>
+
+using namespace std;
 
 #define FPP             1
 #define TPP             2
@@ -32,16 +35,9 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
         Player m_player;
         void keyboardAction();
 
-    public slots:
-        void setXRotation(float angle);
-        void setYRotation(float angle);
-        void setZRotation(float angle);
+        void gridOfCubes();
+public slots:
         void cleanup();
-
-    signals:
-        void xRotationChanged(float angle);
-        void yRotationChanged(float angle);
-        void zRotationChanged(float angle);
 
     protected:
         void initializeGL() override;
@@ -53,7 +49,6 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
         void keyReleaseEvent(QKeyEvent *event) override;
 
         void setTransforms(void);
-        void qNormalizeAngle(float &angle);
 
         void updateGL();
 
@@ -78,13 +73,10 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
         QMatrix4x4 m_camera;
         QMatrix4x4 m_world;
 
-        QMap<QString, CMesh*> m_meshes;
+        //QMap<QString, CMesh*> m_meshes;
 
         bool m_keyState[256];
 
-        float m_camXRot = 15;
-        float m_camYRot = 330;
-        float m_camZRot = 0;
         float m_camDistance = 1.5f;
 
         QElapsedTimer timer;
@@ -92,12 +84,11 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
         float lastUpdateTime;
         float FPS;
 
-        QVector3D m_robotPosition;
-        float robotArmAngle = 0;
-
         int cameraType=FPP;
         void cameraTypeUpdateGL();
 
+        vector<GameObject*> m_gameObjects;
+        void addObject(GameObject* obj);
 };
 
 #endif

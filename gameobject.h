@@ -20,6 +20,7 @@ class GameObject{
 
     string m_name;
 
+    //interface:
     virtual void init() = 0;
     virtual void render(GLWidget* glwidget) = 0;
     virtual void update() = 0;
