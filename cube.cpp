@@ -1,4 +1,6 @@
 #include "cube.h"
+#include <iostream>
+using namespace std;
 
 Cube::Cube()
 {
@@ -17,5 +19,13 @@ void Cube::render(GLWidget* glwidget)
 
 void Cube::update()
 {
+    //wykorzystanie energii
+    //energy = energy + energy;
+    position = position+energy;
+    //wytraanie energii
+    energy = energy / 1.2f;
+}
 
+void Cube::printPosition(){
+    cout << "Pozycja x:  "<< energy.x()<<"\tPozycja y:  "<< energy.y()<<"\tPozycja z:  "<< energy.z()<<endl;
 }

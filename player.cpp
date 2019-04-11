@@ -3,7 +3,7 @@
 
 Player::Player()
 {
-    position = QVector3D(0, 0, 0);
+    energy = QVector3D(0, 0, 0);
     direction = QVector3D(0, 0, -1);
     speed = 0.01f;
 }
@@ -13,7 +13,7 @@ float Player::getSpeed(){
 }
 
 void Player::printPosition(){
-    cout << "Pozycja x:  "<< position.x()<<"\tPozycja y:  "<< position.y()<<"\tPozycja z:  "<< position.z()<<endl;
+    cout << "Pozycja x:  "<< energy.x()<<"\tPozycja y:  "<< energy.y()<<"\tPozycja z:  "<< energy.z()<<endl;
 }
 
 void Player::printDirection(){
@@ -35,5 +35,11 @@ void Player::render(GLWidget* glwidget)
 
 void Player::update()
 {
-    rotation.setY(90-atan2(direction.z(), direction.x()*180/3.14f));
+    rotation.setY(90-atan2(direction.z(), direction.x())*180/3.14f);
+    position= position+energy;
+    //wykorzystanie energii
+
+    //wytracanie energii
+    energy = energy/1.2f;
+
 }

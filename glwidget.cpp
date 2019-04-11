@@ -55,7 +55,6 @@ void GLWidget::gridOfCubes(){
             // Wskaźnik do Cube'a z tworzeniem obiektu.
             // MUSI BYĆ WSKAŹNIK !!!
             Cube* cube = new Cube();
-
             // Ustawienie pozycji Cube'a
             cube->position.setX(j * 1 - 3);
             cube->position.setY(0);
@@ -64,12 +63,11 @@ void GLWidget::gridOfCubes(){
             cube->material_color.setX(i * 0.2f);
             cube->material_color.setY(0.5f);
             cube->material_color.setZ(j * 0.1f);
-
             // Wielkość Cube'a.
             // Ustawienie w jednej linijce
             // zamiast osobno dla X, Y i Z.
             cube->scale = QVector3D(0.3f, 0.3f, 0.3f);
-
+            cube->m_radius = 0.3 * sqrt(3 * cube->scale.x() * cube->scale.x());
             // Dodanie obiektu do sceny.
             addObject(cube);
         }
@@ -81,6 +79,7 @@ void GLWidget::initializeGL()
     addObject(&m_player);
     //pole kwadratow
     gridOfCubes();
+
 
     initializeOpenGLFunctions();
     glClearColor(0.1f, 0.2f, 0.3f, 1);
@@ -408,20 +407,20 @@ void GLWidget::keyReleaseEvent(QKeyEvent *e)
 void GLWidget::keyboardAction(){
     if(m_keyState[Qt::Key_W])
     {
-        m_player.position.setX(m_player.position.x() + m_player.direction.x() * m_player.getSpeed());
-        m_player.position.setZ(m_player.position.z() + m_player.direction.z() * m_player.getSpeed());
+        m_player.energy.setX(m_player.energy.x() + m_player.direction.x() * m_player.speed);
+        m_player.energy.setZ(m_player.energy.z() + m_player.direction.z() * m_player.speed);
     }
     if(m_keyState[Qt::Key_S]){
-        m_player.position.setX(m_player.position.x() - m_player.direction.x() * m_player.getSpeed());
-        m_player.position.setZ(m_player.position.z() - m_player.direction.z() * m_player.getSpeed());
+        m_player.energy.setX(m_player.energy.x() - m_player.direction.x() * m_player.speed);
+        m_player.energy.setZ(m_player.energy.z() - m_player.direction.z() * m_player.speed);
     }
     if(m_keyState[Qt::Key_A]){
-        m_player.position.setX(m_player.position.x() + m_player.direction.z() * m_player.getSpeed());
-        m_player.position.setZ(m_player.position.z() - m_player.direction.x() * m_player.getSpeed());
+        m_player.energy.setX(m_player.energy.x() + m_player.direction.z() * m_player.speed);
+        m_player.energy.setZ(m_player.energy.z() - m_player.direction.x() * m_player.speed);
     }
     if(m_keyState[Qt::Key_D]){
-        m_player.position.setX(m_player.position.x() - m_player.direction.z() * m_player.getSpeed());
-        m_player.position.setZ(m_player.position.z() + m_player.direction.x() * m_player.getSpeed());
+        m_player.energy.setX(m_player.energy.x() - m_player.direction.z() * m_player.speed);
+        m_player.energy.setZ(m_player.energy.z() + m_player.direction.x() * m_player.speed);
     }
     if(m_keyState[Qt::Key_Q]){
         float phi = atan2(m_player.direction.z(), m_player.direction.x());
@@ -481,7 +480,7 @@ void GLWidget::cameraTypeUpdateGL(){
     }
 }
 
-void GLWidget::addObject(GameObject *obj)
+void GLWidget::addObject(GameObject* obj)
 {
     obj->init();
     m_gameObjects.push_back(obj);
@@ -490,12 +489,35 @@ void GLWidget::addObject(GameObject *obj)
 void GLWidget::updateGL()
 {
     keyboardAction();
-    //robotArmAngle = robotArmAngle + 1;
     QCursor::setPos(mapToGlobal(QPoint(width()/2, height()/2))); //mysz na srodek
-    m_player.printPosition();
 
-    for(int i=0; i< m_gameObjects.size(); i++){
+    for(int i = 0 ; i < m_gameObjects.size(); i++){
         GameObject* obj = m_gameObjects[i];
+
+            // Porównujemy każdy obiekt z każdym
+        for(int j = 0 ; j < m_gameObjects.size() ; j++)
+        {
+            // Nie porównujemy obiektów samych ze sobą
+            if(i == j){
+                continue;
+            }
+            GameObject* obj2 = m_gameObjects[j];
+
+                // Liczymy wektor od pozycji jednego obiektu do drugiego
+            QVector3D v = obj->position - obj2->position;
+                // Długość tego wektora to odległość między środkami obiektów
+            float d = v.length();
+                // Porównujemy z sumą promieni
+            if(d < (obj->m_radius + obj2->m_radius))
+            {
+                    // Reakcja na kolizję!
+                v.normalize();
+                float energySum = obj->energy.length() + obj2->energy.length();
+                obj->energy = v * energySum / 2;
+                obj2->energy = -v * energySum / 2;
+            }
+        }
         obj->update();
     }
+
 }

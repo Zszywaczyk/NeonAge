@@ -11,10 +11,10 @@ class Cube: public GameObject
 public:
     Cube();
 
-
     void init();
     void render(GLWidget* glwidget);
     void update();
+    void printPosition();
     CMesh m_mesh;
 };
 

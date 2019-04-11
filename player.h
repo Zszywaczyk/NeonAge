@@ -11,17 +11,17 @@ using namespace std;
 class Player: public GameObject
 {
     private:
-        float speed;
+
 
     public:
         Player();
 
-        QVector3D position;
         QVector3D direction;
 
         float getSpeed();
         void printPosition();
         void printDirection();
+        float speed;
 
         CMesh m_mesh;
 
