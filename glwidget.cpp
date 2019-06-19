@@ -76,15 +76,17 @@ void GLWidget::gridOfCubes(){
 
 void GLWidget::initializeGL()
 {
-    addObject(&m_player);
+    //addObject(&m_player);
     //pole kwadratow
-    gridOfCubes();
+    //gridOfCubes();
 
 
     initializeOpenGLFunctions();
     glClearColor(0.1f, 0.2f, 0.3f, 1);
     glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
+
+    CMesh::loadAllMeshes();
 
     m_program = new QOpenGLShaderProgram;
     m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, "resources/shader.vs");
@@ -391,6 +393,19 @@ void GLWidget::keyPressEvent(QKeyEvent *e)
     else if(e->key() == Qt::Key_F4)
         cameraType = TPP;
     //=======
+    //shooting left mouse
+    else if (e->key() == Qt::Key_Space){
+        Bullet* bullet = new Bullet();
+
+        bullet->position = m_player.position + m_player.direction * 0.7f;
+        bullet->position.setY(0);
+        bullet->scale = QVector3D(0.5f, 0.5f, 0.5f);
+        bullet->m_radius = 0.5f;
+        bullet->energy = 3 * m_player.direction;
+        bullet->energy.setY(0);
+
+        addObject(bullet);
+    }
     else
         QWidget::keyPressEvent(e);
 
@@ -490,7 +505,7 @@ void GLWidget::updateGL()
 {
     keyboardAction();
     QCursor::setPos(mapToGlobal(QPoint(width()/2, height()/2))); //mysz na srodek
-
+    cout<<m_gameObjects.size()<<endl;
     for(int i = 0 ; i < m_gameObjects.size(); i++){
         GameObject* obj = m_gameObjects[i];
 
@@ -510,14 +525,47 @@ void GLWidget::updateGL()
                 // Porównujemy z sumą promieni
             if(d < (obj->m_radius + obj2->m_radius))
             {
-                    // Reakcja na kolizję!
+             /*       // Reakcja na kolizję!
                 v.normalize();
                 float energySum = obj->energy.length() + obj2->energy.length();
                 obj->energy = v * energySum / 2;
-                obj2->energy = -v * energySum / 2;
+                obj2->energy = -v * energySum / 2;*/
+
+                string name1 = obj->m_name;
+                string name2 = obj2->m_name;
+
+                GameObject* o1 = obj;
+                GameObject* o2 = obj2;
+
+                if(strcmp(name1.c_str(), name2.c_str()) > 0){
+                    o1 = obj2;
+                    o2 = obj;
+                    v= -v;
+                }
+                if(!o1->m_name.compare("Player") && !o2->m_name.compare("bullet")){
+
+                } else{
+                    //Reakcja na kolizje
+                    v.normalize();
+                    float energySum = o1->energy.length() + o2->energy.length();
+                    o1->energy = v * energySum / 2;
+                    o2->energy = -v * energySum / 2;
+                }
+
             }
         }
         obj->update();
     }
+
+    //deleting bullets and if isAlive get false other object
+    for(int i = 0 ; i < m_gameObjects.size(); ){
+        GameObject* obj = m_gameObjects[i];
+        if(obj->isAlive == false){
+            m_gameObjects.erase(m_gameObjects.begin() + i);
+            delete obj;
+        }else
+            i++;
+    }
+
 
 }

@@ -187,3 +187,21 @@ void CMesh::generateMeshFromObjFile(QString filename)
 
     initVboAndVao();
 }
+
+map<string, CMesh*> CMesh::m_meshes;
+
+void CMesh::loadAllMeshes(){
+    CMesh* mesh;
+
+    mesh = new CMesh;
+    mesh->generateCube(1.0f, 1.0f, 1.0f);
+    m_meshes["cube"] = mesh;
+
+    mesh = new CMesh;
+    mesh->generateSphere(0.5f, 24);
+    m_meshes["sphere"] = mesh;
+
+    mesh = new CMesh;
+    mesh->generateMeshFromObjFile("resources/bunny.obj");
+    m_meshes["bunny"] = mesh;
+}

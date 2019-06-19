@@ -23,10 +23,10 @@ class Player: public GameObject
         void printDirection();
         float speed;
 
-        CMesh m_mesh;
+        CMesh* m_mesh;
 
         void init();
-        void render(GLWidget *glwidget);
+        void render(GLWidget* glwidget);
         void update();
 };
 

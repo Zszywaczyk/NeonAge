@@ -21,6 +21,7 @@ class GameObject{
         QVector3D position = QVector3D(0.0f,0.0f,0.0f);
 
         string m_name;
+        bool isAlive = true;
 
         //interface:
         virtual void init() = 0;

@@ -8,6 +8,8 @@
 #include <QVector2D>
 #include <QVector3D>
 
+using namespace std;
+
 class GLWidget;
 
 class CMesh
@@ -27,6 +29,8 @@ public:
 
     void render(GLWidget* glWidget);
 
+    static map<string, CMesh*> m_meshes;
+    static void loadAllMeshes();
 
 private:
     void add(const QVector3D &v, const QVector3D &n);

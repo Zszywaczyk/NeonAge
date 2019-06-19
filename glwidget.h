@@ -10,6 +10,7 @@
 #include "cmesh.h"
 #include <QElapsedTimer>
 #include "player.h"
+#include "bullet.h"
 #include <vector>
 
 using namespace std;
