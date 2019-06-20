@@ -32,8 +32,11 @@ public:
     static map<string, CMesh*> m_meshes;
     static void loadAllMeshes();
 
-private:
+    GLenum m_primitive;
     void add(const QVector3D &v, const QVector3D &n, const QVector2D &uv);
+
+private:
+
 
     void quad3(GLfloat x1, GLfloat y1, GLfloat z1,
                GLfloat x2, GLfloat y2, GLfloat z2,
@@ -42,7 +45,7 @@ private:
 
     QVector<GLfloat> m_data;
     int m_count;
-    GLenum m_primitive;
+
 
     QOpenGLVertexArrayObject m_vao;
     QOpenGLBuffer m_vbo;

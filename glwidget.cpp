@@ -99,27 +99,16 @@ void GLWidget::initializeGL()
     m_lightLoc.ambient = m_program->uniformLocation("light.ambient");
     m_lightLoc.diffuse = m_program->uniformLocation("light.diffuse");
 
-    /*m_meshes.insert("Cube", new CMesh);
-    m_meshes["Cube"]->generateCube(1.0f, 1.0f, 1.0f);
-
-    m_meshes.insert("Sphere", new CMesh);
-    m_meshes["Sphere"]->generateSphere(0.5f, 24);
-
-    m_meshes.insert("Bunny", new CMesh);
-    m_meshes["Bunny"]->generateMeshFromObjFile("resources/bunny.obj");*/
-
     m_program->release();
 	
 	lastUpdateTime = 0;
-	timer.start();
-	FPS = 60;
+    timer.start();
 
     CMesh::loadAllMeshes();
     TextureManager::init();
+    initCollisionTriangles();
     addObject(&m_player);
     gridOfCubes();
-
-    //m_robotPosition = QVector3D(0.0f, 0.0f, 0.0f);
 	
 }
 
@@ -137,34 +126,14 @@ void GLWidget::paintGL()
     m_program->setUniformValue(m_lightLoc.ambient, QVector3D(0.1f, 0.1f, 0.1f));
     m_program->setUniformValue(m_lightLoc.diffuse, QVector3D(0.9f, 0.9f, 0.9f));
 
-    /*m_camera.setToIdentity();
-    m_camera.translate(0, 0, -m_camDistance);
-
-    m_world.setToIdentity();
-    m_world.rotate(m_camXRot, 1, 0, 0);
-    m_world.rotate(m_camYRot, 0, 1, 0);
-    m_world.rotate(m_camZRot, 0, 0, 1);*/
-
     m_camera.setToIdentity();
     m_world.setToIdentity();
 
-    //FPP
-        /*m_camera.lookAt(m_player.position,
-                    m_player.position + m_player.direction,
-                    QVector3D(0,1,0));
-
-    //TPP
-    if(cameraChoiceID == TPP){
-    m_camera.lookAt(
-        m_player.position - m_camDistance * m_player.direction,
-        m_player.position,
-        QVector3D(0, 1, 0) );
-    }*/
     cameraTypeUpdateGL();
-    //cout<<"dsajdsyahb"<<endl;
+
     for(int i= 0; i< m_gameObjects.size();i++){
         GameObject* obj = m_gameObjects[i];
-        //cout<<"dupa";
+
         m_program->setUniformValue(m_modelColorLoc, obj->material_color);
 
         if(obj->m_texture != nullptr){
@@ -389,6 +358,8 @@ void GLWidget::updateGL()
     for(int i = 0 ; i < m_gameObjects.size(); i++){
         GameObject* obj = m_gameObjects[i];
 
+        obj->previousPosition = obj->position;  // Poprzednia pozycja
+
             // Porównujemy każdy obiekt z każdym
         for(int j = 0 ; j < m_gameObjects.size() ; j++)
         {
@@ -422,10 +393,16 @@ void GLWidget::updateGL()
                     o2 = obj;
                     v= -v;
                 }
+
                 if(!o1->m_name.compare("Player") && !o2->m_name.compare("bullet")){
 
+                } else if(!o1->m_name.compare("bullet") && !o2->m_name.compare("cube")){
+                    o1->isAlive = false;
+                    o2->isAlive = false;
                 } else{
                     //Reakcja na kolizje
+                    o1->position = o1->position + v * (d/2); // Poprawa
+                    o2->position = o2->position - v * (d/2); // kolizji
                     v.normalize();
                     float energySum = o1->energy.length() + o2->energy.length();
                     o1->energy = v * energySum / 2;
@@ -434,6 +411,8 @@ void GLWidget::updateGL()
 
             }
         }
+        obj->energy.setY(obj->energy.y() - 0.02f); //Grawitacja
+
         obj->update();
     }
 
@@ -447,5 +426,107 @@ void GLWidget::updateGL()
             i++;
     }
 
+    for(unsigned int i = 0; i< m_gameObjects.size();i++){
+        GameObject* obj = m_gameObjects[i];
+
+        for(int j = 0; j<collisionTriangles.size(); j++){
+            Triangle tr = collisionTriangles[j];
+
+            float currDist = tr.A * obj->position.x() + tr.B * obj->position.y() + tr.C * obj->position.z() + tr.D;
+            float prevDist = tr.A * obj->previousPosition.x() + tr.B * obj->previousPosition.y() + tr.C * obj->previousPosition.z() + tr.D;
+
+            if((currDist * prevDist < 0) || abs(currDist) < obj->m_radius){
+                // Rzut pozycji obiektu na plaszczyznie
+                QVector3D p = obj->position - tr.n*currDist;
+
+                //Przesuniecie punktu do srodka trojkata o dlugosci promienia kolidera
+                QVector3D r = (tr.v1 + tr.v2 + tr.v3)*(1.0f / 3.0f) - p;
+                r = r.normalized();
+                p = p+r*obj->m_radius;
+
+                //Obliczenie v, w, u - wspolrzednych barycentrycznych
+                QVector3D v0 = tr.v2 - tr.v1, v1 = tr.v3 - tr.v1, v2 = p - tr.v1;
+                float d00 = QVector3D::dotProduct(v0, v0);
+                float d01 = QVector3D::dotProduct(v0, v1);
+                float d11 = QVector3D::dotProduct(v1, v1);
+                float d20 = QVector3D::dotProduct(v2, v0);
+                float d21 = QVector3D::dotProduct(v2, v1);
+                float denom = d00 * d11 - d01 * d01;
+
+                float v = (d11 * d20 - d01 * d21) / denom;
+                float w = (d00 * d21 - d01 * d20) / denom;
+                float u = 1.0f - v - w;
+
+                if(v>=0 && w>=0 && (v+w)<=1){
+                    float d = obj->m_radius - currDist;
+
+                    obj->position = obj->position + tr.n * d;
+
+                    obj->energy = obj->energy - tr.n * QVector3D::dotProduct(tr.n, obj->energy)*2;
+                }
+
+            }
+
+        }
+
+    }
+
+
+}
+
+void GLWidget::initCollisionTriangles(){
+
+    //TUTAJ DODAWAĆ NOWE KOLIDERY start
+
+    addTriangleCollider(
+                QVector3D(25,0,-25),
+                QVector3D(-25,0,-25),
+                QVector3D(25,0,25),
+                1,
+                QVector2D(1,1),
+                QVector2D(0,1),
+                QVector2D(1,0),
+                TextureManager::getTexture("grass"));
+
+    addTriangleCollider(
+                QVector3D(-25,0,-25),
+                QVector3D(-25,0,25),
+                QVector3D(25,0,25),
+                1,
+                QVector2D(0,1),
+                QVector2D(0,0),
+                QVector2D(1,0),
+                TextureManager::getTexture("grass"));
+
+    //TUTAJ DODAWAĆ NOWE KOLIDERY end
+
+    collisionTrianglesMesh.m_primitive = GL_TRIANGLES;
+    collisionTrianglesMesh.initVboAndVao();
+
+}
+
+void GLWidget::addTriangleCollider(QVector3D v1, QVector3D v2, QVector3D v3,
+                                   int groupSize, QVector2D uv1, QVector2D uv2,
+                                   QVector2D uv3, QOpenGLTexture *texture){
+
+    Triangle t;
+    t.v1 = v1;
+    t.v2 = v2;
+    t.v3 = v3;
+    t.texture = texture;
+    t.groupSize = groupSize;
+
+    t.n = QVector3D::crossProduct(v1-v3, v2-v1).normalized();
+
+    t.A = t.n.x();
+    t.B = t.n.y();
+    t.C = t.n.z();
+    t.D = -(t.A * v1.x() + t.B * v1.y() + t.C*v1.z());
+
+    collisionTriangles.push_back(t);
+
+    collisionTrianglesMesh.add(t.v1, t.n, uv1);
+    collisionTrianglesMesh.add(t.v2, t.n, uv2);
+    collisionTrianglesMesh.add(t.v3, t.n, uv3);
 
 }

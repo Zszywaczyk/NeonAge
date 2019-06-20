@@ -86,13 +86,29 @@ public slots:
         QElapsedTimer timer;
 
         float lastUpdateTime;
-        float FPS;
+        float FPS = 60;
 
         int cameraType=FPP;
         void cameraTypeUpdateGL();
 
         vector<GameObject*> m_gameObjects;
         void addObject(GameObject* obj);
+
+        struct Triangle{
+            QVector3D v1, v2, v3;
+            QOpenGLTexture* texture;
+            QVector3D n;
+            float A, B, C, D;
+            int groupSize;
+        };
+
+        vector<Triangle> collisionTriangles;
+        CMesh collisionTrianglesMesh;
+        void initCollisionTriangles();
+        void addTriangleCollider(QVector3D v1, QVector3D v2, QVector3D v3, int groupSize = 1,
+                                 QVector2D uv1 = QVector2D(0,0), QVector2D uv2 = QVector2D(0,0),
+                                 QVector2D uv3 = QVector2D(0,0), QOpenGLTexture* texture = nullptr);
+
 };
 
 #endif
