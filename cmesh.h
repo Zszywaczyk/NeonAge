@@ -12,7 +12,7 @@ using namespace std;
 
 class GLWidget;
 
-class CMesh
+class   CMesh
 {
 public:
     CMesh();
