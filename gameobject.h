@@ -1,6 +1,7 @@
 #ifndef GAMEOBJECT_H
 #define GAMEOBJECT_H
 #include <QVector3D>
+#include <QOpenGLTexture>
 
 using namespace std;
 
@@ -28,6 +29,8 @@ class GameObject{
         virtual void render(GLWidget* glwidget) = 0;
         virtual void update() = 0;
         virtual void printPosition() = 0;
+
+        QOpenGLTexture* m_texture = nullptr;
 };
 
 #endif // GAMEOBJECT_H

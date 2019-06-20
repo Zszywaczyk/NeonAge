@@ -5,7 +5,8 @@ HEADERS       = glwidget.h \
     player.h \
     gameobject.h \
     cube.h \
-    bullet.h
+    bullet.h \
+    texturemanager.h
 SOURCES       = glwidget.cpp \
                 main.cpp \
                 window.cpp \
@@ -14,7 +15,8 @@ SOURCES       = glwidget.cpp \
     player.cpp \
     gameobject.cpp \
     cube.cpp \
-    bullet.cpp
+    bullet.cpp \
+    texturemanager.cpp
 
 QT           += widgets
 

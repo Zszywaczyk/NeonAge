@@ -68,6 +68,7 @@ void GLWidget::gridOfCubes(){
             // zamiast osobno dla X, Y i Z.
             cube->scale = QVector3D(0.3f, 0.3f, 0.3f);
             cube->m_radius = 0.3 * sqrt(3 * cube->scale.x() * cube->scale.x());
+            cube->m_texture = TextureManager::getTexture("brick");
             // Dodanie obiektu do sceny.
             addObject(cube);
         }
@@ -76,17 +77,10 @@ void GLWidget::gridOfCubes(){
 
 void GLWidget::initializeGL()
 {
-    //addObject(&m_player);
-    //pole kwadratow
-    //gridOfCubes();
-
-
     initializeOpenGLFunctions();
     glClearColor(0.1f, 0.2f, 0.3f, 1);
     glFrontFace(GL_CCW);
     glCullFace(GL_BACK);
-
-    //CMesh::loadAllMeshes();
 
     m_program = new QOpenGLShaderProgram;
     m_program->addShaderFromSourceFile(QOpenGLShader::Vertex, "resources/shader.vs");
@@ -100,6 +94,7 @@ void GLWidget::initializeGL()
     m_viewMatrixLoc = m_program->uniformLocation("viewMatrix");
     m_modelMatrixLoc = m_program->uniformLocation("modelMatrix");
     m_modelColorLoc = m_program->uniformLocation("modelColor");
+    m_hasTextureLoc = m_program->uniformLocation("hasTexture");
     m_lightLoc.position = m_program->uniformLocation("light.position");
     m_lightLoc.ambient = m_program->uniformLocation("light.ambient");
     m_lightLoc.diffuse = m_program->uniformLocation("light.diffuse");
@@ -120,6 +115,7 @@ void GLWidget::initializeGL()
 	FPS = 60;
 
     CMesh::loadAllMeshes();
+    TextureManager::init();
     addObject(&m_player);
     gridOfCubes();
 
@@ -170,6 +166,14 @@ void GLWidget::paintGL()
         GameObject* obj = m_gameObjects[i];
         //cout<<"dupa";
         m_program->setUniformValue(m_modelColorLoc, obj->material_color);
+
+        if(obj->m_texture != nullptr){
+            m_program->setUniformValue(m_hasTextureLoc, 1);
+            obj->m_texture->bind();
+        }
+        else{
+            m_program->setUniformValue(m_hasTextureLoc, 0);
+        }
 
         worldMatrixStack.push(m_world);
             m_world.translate(obj->position);
