@@ -55,6 +55,14 @@ void CMesh::render(GLWidget* glWidget)
 {
     m_vao_binder->rebind();
     glWidget->glDrawArrays(m_primitive, 0, vertexCount());
+    m_vao_binder->release();
+}
+
+void CMesh::render(GLWidget* glWidget, int offset, int count)
+{
+    m_vao_binder->rebind();
+    glWidget->glDrawArrays(m_primitive, offset, count);
+    m_vao_binder->release();
 }
 
 void CMesh::quad3(GLfloat x1, GLfloat y1, GLfloat z1,
@@ -125,6 +133,17 @@ void CMesh::generateSphere(float r, int N)
     }
 
     m_primitive = GL_TRIANGLE_STRIP;
+
+    initVboAndVao();
+}
+
+void CMesh::generateRectangle(){
+    add(QVector3D(0,0,0), QVector3D(0,0,0), QVector2D(0,0));
+    add(QVector3D(0,1,0), QVector3D(0,0,0), QVector2D(0,1));
+    add(QVector3D(1,1,0), QVector3D(0,0,0), QVector2D(1,1));
+    add(QVector3D(1,0,0), QVector3D(0,0,0), QVector2D(1,0));
+
+    m_primitive = GL_QUADS;
 
     initVboAndVao();
 }
@@ -204,7 +223,7 @@ void CMesh::loadAllMeshes(){
     CMesh* mesh;
 
     mesh = new CMesh;
-    mesh->generateCube(1.0f, 1.0f, 1.0f);
+    mesh->generateCube(1.0f, 1.0f, 1.0f); //skalowanie
     m_meshes["cube"] = mesh;
 
     mesh = new CMesh;
@@ -212,6 +231,14 @@ void CMesh::loadAllMeshes(){
     m_meshes["sphere"] = mesh;
 
     mesh = new CMesh;
+    mesh->generateRectangle();
+    m_meshes["rect"] = mesh;
+
+    mesh = new CMesh;
     mesh->generateMeshFromObjFile("resources/bunny.obj");
     m_meshes["bunny"] = mesh;
+
+    mesh = new CMesh;
+    mesh->generateMeshFromObjFile("resources/enemy.obj");
+    m_meshes["enemy"] = mesh;
 }

@@ -28,6 +28,9 @@ class Player: public GameObject
         void init();
         void render(GLWidget* glwidget);
         void update();
+        float hp =100;
+        const float MAX_HP = 100;
+        void move();
 };
 
 #endif // PLAYER_H

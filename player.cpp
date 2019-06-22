@@ -5,7 +5,7 @@ Player::Player()
 {
     energy = QVector3D(0, 0, 0);
     direction = QVector3D(0, 0, -1);
-    speed = 0.01f;
+    speed = 0.02f;
 }
 
 float Player::getSpeed(){
@@ -41,5 +41,9 @@ void Player::update()
 
     //wytracanie energii
     energy = energy/1.2f;
+
+}
+
+void Player::move(){
 
 }

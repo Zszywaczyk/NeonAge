@@ -23,11 +23,13 @@ public:
 
     void generateCube(GLfloat ww, GLfloat hh, GLfloat dd);
     void generateSphere(float r, int N);
+    void generateRectangle();
     void generateMeshFromObjFile(QString filename);
 
     void initVboAndVao();
 
     void render(GLWidget* glWidget);
+    void render(GLWidget* glWidget, int offset, int count);
 
     static map<string, CMesh*> m_meshes;
     static void loadAllMeshes();

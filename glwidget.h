@@ -10,9 +10,11 @@
 #include "cmesh.h"
 #include <QElapsedTimer>
 #include "player.h"
+#include "enemy.h"
 #include "bullet.h"
 #include <vector>
 #include "texturemanager.h"
+#include <QPainter>
 
 using namespace std;
 
@@ -39,6 +41,7 @@ class GLWidget : public QOpenGLWidget, protected QOpenGLFunctions
         void keyboardAction();
 
         void gridOfCubes();
+        void addEnemy();
 public slots:
         void cleanup();
 
@@ -54,24 +57,67 @@ public slots:
         void setTransforms(void);
 
         void updateGL();
+        void paintHUD();
 
     private:
+        void samplescene();
+        bool started = false;
+        bool isWinner = false;
 
         struct LightLocStruct
         {
             int position;
             int ambient;
             int diffuse;
+            int specular;
+            int isActive;
+            int attenuation;
         };
+
+        struct MaterialLocStruct{
+            int ambient;
+            int diffuse;
+            int specular;
+            int shininess;
+        };
+
+        struct RectangleLocStruct{
+            int xPos;
+            int yPos;
+            int width;
+            int height;
+        };
+
+        struct Light{
+            QVector3D position;
+            QVector3D ambient;
+            QVector3D diffuse;
+            QVector3D specular;
+            bool isActive = false;
+            float attenuation;
+        };
+
+        static const int MAX_LIGHTS = 5;
+        Light m_lights[MAX_LIGHTS];
+        void setLights();
 
         QPoint m_lastPos;
         QOpenGLShaderProgram *m_program;
         int m_projMatrixLoc;
         int m_viewMatrixLoc;
         int m_modelMatrixLoc;
-        int m_modelColorLoc;
         int m_hasTextureLoc;
-        LightLocStruct m_lightLoc;
+        int m_cameraPositionLoc;
+        LightLocStruct m_lightLoc[MAX_LIGHTS];
+        MaterialLocStruct m_materialLoc;
+
+        QOpenGLShaderProgram *m_program_hud;
+        int m_resolutionLoc_hud;
+        int m_color_hud;
+        int m_hasTextureLoc_hud;
+        RectangleLocStruct m_rectangleLoc_hud;
+        void setRectangle( float xPos, float yPos, float width, float height, QVector3D color, QOpenGLTexture* texture );
+        QVector2D m_resolution;
 
         QMatrix4x4 m_proj;
         QMatrix4x4 m_camera;

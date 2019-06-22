@@ -30,3 +30,6 @@ void Bullet::update(){
 void Bullet::printPosition(){
     cout << "Pozycja x:  "<< energy.x()<<"\tPozycja y:  "<< energy.y()<<"\tPozycja z:  "<< energy.z()<<endl;
 }
+void Bullet::move(){
+
+}

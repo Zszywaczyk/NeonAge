@@ -6,7 +6,8 @@ HEADERS       = glwidget.h \
     gameobject.h \
     cube.h \
     bullet.h \
-    texturemanager.h
+    texturemanager.h \
+    enemy.h
 SOURCES       = glwidget.cpp \
                 main.cpp \
                 window.cpp \
@@ -16,7 +17,8 @@ SOURCES       = glwidget.cpp \
     gameobject.cpp \
     cube.cpp \
     bullet.cpp \
-    texturemanager.cpp
+    texturemanager.cpp \
+    enemy.cpp
 
 QT           += widgets
 
@@ -29,4 +31,6 @@ OBJECTS_DIR = builds/objects
 
 DISTFILES += \
     builds/resources/shader.fs \
-    builds/resources/shader.vs
+    builds/resources/shader.vs \
+    builds/resources/shader_hud.fs \
+    builds/resources/shader_hud.vs

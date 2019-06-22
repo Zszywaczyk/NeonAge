@@ -5,6 +5,8 @@ using namespace std;
 #include <map>
 #include <string>
 #include <QOpenGLTexture>
+#include <iostream>
+using namespace std;
 
 class TextureManager
 {

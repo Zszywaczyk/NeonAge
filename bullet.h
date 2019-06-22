@@ -17,6 +17,7 @@ class Bullet: public GameObject
         void render(GLWidget* glwidget);
         void update();
         void printPosition();
+        void move();
 
         CMesh* m_mesh;
 };

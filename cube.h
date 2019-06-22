@@ -16,6 +16,7 @@ public:
     void update();
     void printPosition();
     CMesh* m_mesh;
+    void move();
 };
 
 #endif // CUBE_H
